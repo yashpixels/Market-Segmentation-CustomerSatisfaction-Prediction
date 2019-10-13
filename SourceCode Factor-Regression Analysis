@@ -1,0 +1,925 @@
+PCA/FA MLR Proect
+Setup root directory for R Markdown
+knitr::opts_knit$set(root.dir = 'C:/Users/Hp/Desktop/R Programming')
+Environment Setup
+setwd("C:/Users/Hp/Desktop/R Programming")
+getwd()
+## [1] "C:/Users/Hp/Desktop/R Programming"
+Data Import
+Data1 <- read.csv("Factor-Hair-Revised.csv", header = TRUE)
+head(Data1)
+##   ID ProdQual Ecom TechSup CompRes Advertising ProdLine SalesFImage
+## 1  1      8.5  3.9     2.5     5.9         4.8      4.9         6.0
+## 2  2      8.2  2.7     5.1     7.2         3.4      7.9         3.1
+## 3  3      9.2  3.4     5.6     5.6         5.4      7.4         5.8
+## 4  4      6.4  3.3     7.0     3.7         4.7      4.7         4.5
+## 5  5      9.0  3.4     5.2     4.6         2.2      6.0         4.5
+## 6  6      6.5  2.8     3.1     4.1         4.0      4.3         3.7
+##   ComPricing WartyClaim OrdBilling DelSpeed Satisfaction
+## 1        6.8        4.7        5.0      3.7          8.2
+## 2        5.3        5.5        3.9      4.9          5.7
+## 3        4.5        6.2        5.4      4.5          8.9
+## 4        8.8        7.0        4.3      3.0          4.8
+## 5        6.8        6.1        4.5      3.5          7.1
+## 6        8.5        5.1        3.6      3.3          4.7
+Invoke Libraries
+library(ggplot2)
+library(corrplot)
+## Warning: package 'corrplot' was built under R version 3.6.1
+## corrplot 0.84 loaded
+library(psych)
+## Warning: package 'psych' was built under R version 3.6.1
+## 
+## Attaching package: 'psych'
+## The following objects are masked from 'package:ggplot2':
+## 
+##     %+%, alpha
+library(nFactors)
+## Warning: package 'nFactors' was built under R version 3.6.1
+## Loading required package: MASS
+## Loading required package: boot
+## 
+## Attaching package: 'boot'
+## The following object is masked from 'package:psych':
+## 
+##     logit
+## Loading required package: lattice
+## 
+## Attaching package: 'lattice'
+## The following object is masked from 'package:boot':
+## 
+##     melanoma
+## 
+## Attaching package: 'nFactors'
+## The following object is masked from 'package:lattice':
+## 
+##     parallel
+library(car)
+## Warning: package 'car' was built under R version 3.6.1
+## Loading required package: carData
+## 
+## Attaching package: 'car'
+## The following object is masked from 'package:boot':
+## 
+##     logit
+## The following object is masked from 'package:psych':
+## 
+##     logit
+library(caTools)
+## Warning: package 'caTools' was built under R version 3.6.1
+Exploratory Data Analysis
+Mydata <- Data1[,-1]
+
+head(Mydata)
+##   ProdQual Ecom TechSup CompRes Advertising ProdLine SalesFImage
+## 1      8.5  3.9     2.5     5.9         4.8      4.9         6.0
+## 2      8.2  2.7     5.1     7.2         3.4      7.9         3.1
+## 3      9.2  3.4     5.6     5.6         5.4      7.4         5.8
+## 4      6.4  3.3     7.0     3.7         4.7      4.7         4.5
+## 5      9.0  3.4     5.2     4.6         2.2      6.0         4.5
+## 6      6.5  2.8     3.1     4.1         4.0      4.3         3.7
+##   ComPricing WartyClaim OrdBilling DelSpeed Satisfaction
+## 1        6.8        4.7        5.0      3.7          8.2
+## 2        5.3        5.5        3.9      4.9          5.7
+## 3        4.5        6.2        5.4      4.5          8.9
+## 4        8.8        7.0        4.3      3.0          4.8
+## 5        6.8        6.1        4.5      3.5          7.1
+## 6        8.5        5.1        3.6      3.3          4.7
+dim(Mydata)
+## [1] 100  12
+summary(Mydata)
+##     ProdQual           Ecom          TechSup         CompRes     
+##  Min.   : 5.000   Min.   :2.200   Min.   :1.300   Min.   :2.600  
+##  1st Qu.: 6.575   1st Qu.:3.275   1st Qu.:4.250   1st Qu.:4.600  
+##  Median : 8.000   Median :3.600   Median :5.400   Median :5.450  
+##  Mean   : 7.810   Mean   :3.672   Mean   :5.365   Mean   :5.442  
+##  3rd Qu.: 9.100   3rd Qu.:3.925   3rd Qu.:6.625   3rd Qu.:6.325  
+##  Max.   :10.000   Max.   :5.700   Max.   :8.500   Max.   :7.800  
+##   Advertising       ProdLine      SalesFImage      ComPricing   
+##  Min.   :1.900   Min.   :2.300   Min.   :2.900   Min.   :3.700  
+##  1st Qu.:3.175   1st Qu.:4.700   1st Qu.:4.500   1st Qu.:5.875  
+##  Median :4.000   Median :5.750   Median :4.900   Median :7.100  
+##  Mean   :4.010   Mean   :5.805   Mean   :5.123   Mean   :6.974  
+##  3rd Qu.:4.800   3rd Qu.:6.800   3rd Qu.:5.800   3rd Qu.:8.400  
+##  Max.   :6.500   Max.   :8.400   Max.   :8.200   Max.   :9.900  
+##    WartyClaim      OrdBilling       DelSpeed      Satisfaction  
+##  Min.   :4.100   Min.   :2.000   Min.   :1.600   Min.   :4.700  
+##  1st Qu.:5.400   1st Qu.:3.700   1st Qu.:3.400   1st Qu.:6.000  
+##  Median :6.100   Median :4.400   Median :3.900   Median :7.050  
+##  Mean   :6.043   Mean   :4.278   Mean   :3.886   Mean   :6.918  
+##  3rd Qu.:6.600   3rd Qu.:4.800   3rd Qu.:4.425   3rd Qu.:7.625  
+##  Max.   :8.100   Max.   :6.700   Max.   :5.500   Max.   :9.900
+str(Mydata)
+## 'data.frame':    100 obs. of  12 variables:
+##  $ ProdQual    : num  8.5 8.2 9.2 6.4 9 6.5 6.9 6.2 5.8 6.4 ...
+##  $ Ecom        : num  3.9 2.7 3.4 3.3 3.4 2.8 3.7 3.3 3.6 4.5 ...
+##  $ TechSup     : num  2.5 5.1 5.6 7 5.2 3.1 5 3.9 5.1 5.1 ...
+##  $ CompRes     : num  5.9 7.2 5.6 3.7 4.6 4.1 2.6 4.8 6.7 6.1 ...
+##  $ Advertising : num  4.8 3.4 5.4 4.7 2.2 4 2.1 4.6 3.7 4.7 ...
+##  $ ProdLine    : num  4.9 7.9 7.4 4.7 6 4.3 2.3 3.6 5.9 5.7 ...
+##  $ SalesFImage : num  6 3.1 5.8 4.5 4.5 3.7 5.4 5.1 5.8 5.7 ...
+##  $ ComPricing  : num  6.8 5.3 4.5 8.8 6.8 8.5 8.9 6.9 9.3 8.4 ...
+##  $ WartyClaim  : num  4.7 5.5 6.2 7 6.1 5.1 4.8 5.4 5.9 5.4 ...
+##  $ OrdBilling  : num  5 3.9 5.4 4.3 4.5 3.6 2.1 4.3 4.4 4.1 ...
+##  $ DelSpeed    : num  3.7 4.9 4.5 3 3.5 3.3 2 3.7 4.6 4.4 ...
+##  $ Satisfaction: num  8.2 5.7 8.9 4.8 7.1 4.7 5.7 6.3 7 5.5 ...
+attach(Mydata)
+Checking for Null Values
+sum(is.na(Mydata))
+## [1] 0
+Check for outliers
+boxplot(Mydata, main = "Boxplot of Product Service Management Variables")
+ 
+Univariate Analsis (Dependent Variable)
+qplot(Satisfaction, data = Mydata, ylab = "Rating",
+      xlab = "Customer Satisfaction",
+      main = "Histogram of Customer Satisfaction") + geom_histogram(bins = 35) +  theme(plot.title = element_text(hjust = 0.5)) 
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+ 
+Check for multicollinearity using corrplot
+Matrix <- cor(Mydata[,-12])
+head(Matrix)
+##                ProdQual          Ecom       TechSup   CompRes Advertising
+## ProdQual     1.00000000 -0.1371632174  0.0956004542 0.1063700 -0.05347313
+## Ecom        -0.13716322  1.0000000000  0.0008667887 0.1401793  0.42989071
+## TechSup      0.09560045  0.0008667887  1.0000000000 0.0966566 -0.06287007
+## CompRes      0.10637000  0.1401792611  0.0966565978 1.0000000  0.19691685
+## Advertising -0.05347313  0.4298907110 -0.0628700668 0.1969168  1.00000000
+## ProdLine     0.47749341 -0.0526878383  0.1926254565 0.5614170 -0.01155082
+##                ProdLine SalesFImage ComPricing WartyClaim OrdBilling
+## ProdQual     0.47749341 -0.15181287 -0.4012819 0.08831231 0.10430307
+## Ecom        -0.05268784  0.79154371  0.2294624 0.05189819 0.15614733
+## TechSup      0.19262546  0.01699054 -0.2707867 0.79716793 0.08010182
+## CompRes      0.56141695  0.22975176 -0.1279543 0.14040830 0.75686859
+## Advertising -0.01155082  0.54220366  0.1342169 0.01079207 0.18423559
+## ProdLine     1.00000000 -0.06131553 -0.4949484 0.27307753 0.42440825
+##               DelSpeed
+## ProdQual    0.02771800
+## Ecom        0.19163607
+## TechSup     0.02544069
+## CompRes     0.86509170
+## Advertising 0.27586308
+## ProdLine    0.60185021
+corrplot(Matrix)
+ 
+corrplot(Matrix, method = "number" , type =  "upper")
+ 
+Check for multicollinearity using VIF (Atleast 1 VIF vallue greater than 4)
+M1 <- lm(Satisfaction~., data = Mydata)
+summary(M1)
+## 
+## Call:
+## lm(formula = Satisfaction ~ ., data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.43005 -0.31165  0.07621  0.37190  0.90120 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -0.66961    0.81233  -0.824  0.41199    
+## ProdQual     0.37137    0.05177   7.173 2.18e-10 ***
+## Ecom        -0.44056    0.13396  -3.289  0.00145 ** 
+## TechSup      0.03299    0.06372   0.518  0.60591    
+## CompRes      0.16703    0.10173   1.642  0.10416    
+## Advertising -0.02602    0.06161  -0.422  0.67382    
+## ProdLine     0.14034    0.08025   1.749  0.08384 .  
+## SalesFImage  0.80611    0.09775   8.247 1.45e-12 ***
+## ComPricing  -0.03853    0.04677  -0.824  0.41235    
+## WartyClaim  -0.10298    0.12330  -0.835  0.40587    
+## OrdBilling   0.14635    0.10367   1.412  0.16160    
+## DelSpeed     0.16570    0.19644   0.844  0.40124    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.5623 on 88 degrees of freedom
+## Multiple R-squared:  0.8021, Adjusted R-squared:  0.7774 
+## F-statistic: 32.43 on 11 and 88 DF,  p-value: < 2.2e-16
+vif(M1)
+##    ProdQual        Ecom     TechSup     CompRes Advertising    ProdLine 
+##    1.635797    2.756694    2.976796    4.730448    1.508933    3.488185 
+## SalesFImage  ComPricing  WartyClaim  OrdBilling    DelSpeed 
+##    3.439420    1.635000    3.198337    2.902999    6.516014
+Bartlett Test (Spherecity test & Sample educacy)
+cortest.bartlett(Matrix)
+## Warning in cortest.bartlett(Matrix): n not specified, 100 used
+## $chisq
+## [1] 619.2726
+## 
+## $p.value
+## [1] 1.79337e-96
+## 
+## $df
+## [1] 55
+KMO(Matrix)
+## Kaiser-Meyer-Olkin factor adequacy
+## Call: KMO(r = Matrix)
+## Overall MSA =  0.65
+## MSA for each item = 
+##    ProdQual        Ecom     TechSup     CompRes Advertising    ProdLine 
+##        0.51        0.63        0.52        0.79        0.78        0.62 
+## SalesFImage  ComPricing  WartyClaim  OrdBilling    DelSpeed 
+##        0.62        0.75        0.51        0.76        0.67
+Simple Linear Regression for the dependent variable with every other independent variable
+cor(Satisfaction,ProdQual)
+## [1] 0.486325
+plot(Satisfaction,ProdQual, col = "red",abline(lm(Satisfaction~ProdQual), col = "blue"))
+ 
+LM1 <- lm(Satisfaction~ProdQual, data = Mydata )
+summary(LM1)
+## 
+## Call:
+## lm(formula = Satisfaction ~ ProdQual, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.88746 -0.72711 -0.01577  0.85641  2.25220 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  3.67593    0.59765   6.151 1.68e-08 ***
+## ProdQual     0.41512    0.07534   5.510 2.90e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.047 on 98 degrees of freedom
+## Multiple R-squared:  0.2365, Adjusted R-squared:  0.2287 
+## F-statistic: 30.36 on 1 and 98 DF,  p-value: 2.901e-07
+predict(LM1)
+##        1        2        3        4        5        6        7        8 
+## 7.204432 7.079896 7.495015 6.332683 7.411991 6.374195 6.540242 6.249659 
+##        9       10       11       12       13       14       15       16 
+## 6.083612 6.332683 7.287455 6.208148 7.619550 7.495015 6.291171 7.287455 
+##       17       18       19       20       21       22       23       24 
+## 6.042100 6.125124 6.000588 7.453503 5.834541 7.661062 7.245944 7.536526 
+##       25       26       27       28       29       30       31       32 
+## 6.166636 6.332683 7.204432 6.581754 7.204432 6.830825 6.540242 7.038384 
+##       33       34       35       36       37       38       39       40 
+## 6.457219 6.996872 6.457219 7.287455 7.411991 7.661062 7.079896 6.208148 
+##       41       42       43       44       45       46       47       48 
+## 7.121408 7.578038 7.536526 5.793029 6.996872 6.125124 7.827109 6.042100 
+##       49       50       51       52       53       54       55       56 
+## 7.785597 6.955361 6.457219 7.079896 7.578038 6.540242 6.996872 7.536526 
+##       57       58       59       60       61       62       63       64 
+## 6.747801 6.830825 7.827109 7.785597 7.287455 7.162920 7.328967 6.872337 
+##       65       66       67       68       69       70       71       72 
+## 6.415707 6.042100 6.042100 5.959077 6.789313 6.332683 7.453503 6.457219 
+##       73       74       75       76       77       78       79       80 
+## 6.374195 7.785597 7.204432 7.785597 6.830825 7.578038 7.536526 6.623266 
+##       81       82       83       84       85       86       87       88 
+## 7.785597 7.287455 7.245944 6.332683 6.872337 6.789313 5.751517 6.872337 
+##       89       90       91       92       93       94       95       96 
+## 7.453503 5.959077 7.453503 6.623266 7.495015 7.536526 7.536526 7.245944 
+##       97       98       99      100 
+## 6.747801 7.287455 6.913849 6.955361
+cor(Satisfaction,Ecom)
+## [1] 0.282745
+plot(Satisfaction,Ecom, col= "red", ylim = c(0,10), abline(lm(Satisfaction~Ecom), col="blue"))
+ 
+LM2 <- lm(Satisfaction~Ecom, data = Mydata)
+summary(LM2)
+## 
+## Call:
+## lm(formula = Satisfaction ~ Ecom, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.37200 -0.78971  0.04959  0.68085  2.34580 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   5.1516     0.6161   8.361 4.28e-13 ***
+## Ecom          0.4811     0.1649   2.918  0.00437 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.149 on 98 degrees of freedom
+## Multiple R-squared:  0.07994,    Adjusted R-squared:  0.07056 
+## F-statistic: 8.515 on 1 and 98 DF,  p-value: 0.004368
+cor(Satisfaction,TechSup)
+## [1] 0.1125972
+plot(Satisfaction,TechSup, col="red" , abline(lm(Satisfaction~TechSup), col="blue"))
+ 
+LM3 <- lm(Satisfaction~TechSup, data = Mydata)
+summary(LM3)
+## 
+## Call:
+## lm(formula = Satisfaction ~ TechSup, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.26136 -0.93297  0.04302  0.82501  2.85617 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  6.44757    0.43592  14.791   <2e-16 ***
+## TechSup      0.08768    0.07817   1.122    0.265    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.19 on 98 degrees of freedom
+## Multiple R-squared:  0.01268,    Adjusted R-squared:  0.002603 
+## F-statistic: 1.258 on 1 and 98 DF,  p-value: 0.2647
+cor(Satisfaction,CompRes)
+## [1] 0.6032626
+plot(Satisfaction,CompRes, col = "red", ylim= c(0,10), xlim=c(0,10),
+     abline(lm(Satisfaction~CompRes), col= "blue"))
+ 
+LM4 <- lm(Satisfaction~CompRes, data = Mydata)
+summary(LM4)
+## 
+## Call:
+## lm(formula = Satisfaction ~ CompRes, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.40450 -0.66164  0.04499  0.63037  2.70949 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  3.68005    0.44285   8.310 5.51e-13 ***
+## CompRes      0.59499    0.07946   7.488 3.09e-11 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.9554 on 98 degrees of freedom
+## Multiple R-squared:  0.3639, Adjusted R-squared:  0.3574 
+## F-statistic: 56.07 on 1 and 98 DF,  p-value: 3.085e-11
+cor(Satisfaction,Advertising)
+## [1] 0.3046695
+plot(Satisfaction,Advertising, col="red", ylim= c(0,10),
+     abline(lm(Satisfaction~Advertising), col="blue"))
+ 
+LM5 <- lm(Satisfaction~Advertising, data = Mydata)
+summary(LM5)
+## 
+## Call:
+## lm(formula = Satisfaction ~ Advertising, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.34033 -0.92755  0.05577  0.79773  2.53412 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   5.6259     0.4237  13.279  < 2e-16 ***
+## Advertising   0.3222     0.1018   3.167  0.00206 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.141 on 98 degrees of freedom
+## Multiple R-squared:  0.09282,    Adjusted R-squared:  0.08357 
+## F-statistic: 10.03 on 1 and 98 DF,  p-value: 0.002056
+cor(Satisfaction,ProdLine)
+## [1] 0.5505459
+plot(Satisfaction,ProdLine, col="red", ylim = c(0,10),
+     abline(lm(Satisfaction~ProdLine), col="blue"))
+ 
+LM6 <- lm(Satisfaction~ProdLine, data = Mydata)
+summary(LM6)
+## 
+## Call:
+## lm(formula = Satisfaction ~ ProdLine, data = Mydata)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.3634 -0.7795  0.1097  0.7604  1.7373 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  4.02203    0.45471   8.845 3.87e-14 ***
+## ProdLine     0.49887    0.07641   6.529 2.95e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1 on 98 degrees of freedom
+## Multiple R-squared:  0.3031, Adjusted R-squared:  0.296 
+## F-statistic: 42.62 on 1 and 98 DF,  p-value: 2.953e-09
+cor(Satisfaction,SalesFImage)
+## [1] 0.5002053
+plot(Satisfaction,SalesFImage, col="red", abline(lm(Satisfaction~SalesFImage), col="blue"))
+ 
+LM7 <- lm(Satisfaction~SalesFImage, data = Mydata)
+summary(LM7)
+## 
+## Call:
+## lm(formula = Satisfaction ~ SalesFImage, data = Mydata)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.2164 -0.5884  0.1838  0.6922  2.0728 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  4.06983    0.50874   8.000 2.54e-12 ***
+## SalesFImage  0.55596    0.09722   5.719 1.16e-07 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.037 on 98 degrees of freedom
+## Multiple R-squared:  0.2502, Adjusted R-squared:  0.2426 
+## F-statistic:  32.7 on 1 and 98 DF,  p-value: 1.164e-07
+cor(Satisfaction,ComPricing)
+## [1] -0.2082957
+plot(Satisfaction,ComPricing, col="red", abline(lm(Satisfaction~ComPricing), col="blue"))
+ 
+LM8 <- lm(Satisfaction~ComPricing, data = Mydata)
+summary(LM8)
+## 
+## Call:
+## lm(formula = Satisfaction ~ ComPricing, data = Mydata)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.9728 -0.9915 -0.1156  0.9111  2.5845 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)  8.03856    0.54427  14.769   <2e-16 ***
+## ComPricing  -0.16068    0.07621  -2.108   0.0376 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.172 on 98 degrees of freedom
+## Multiple R-squared:  0.04339,    Adjusted R-squared:  0.03363 
+## F-statistic: 4.445 on 1 and 98 DF,  p-value: 0.03756
+cor(Satisfaction,WartyClaim)
+## [1] 0.1775448
+plot(Satisfaction,WartyClaim, col="red", abline(lm(Satisfaction~WartyClaim), col="blue"))
+ 
+LM9 <- lm(Satisfaction~WartyClaim, data = Mydata)
+summary(LM9)
+## 
+## Call:
+## lm(formula = Satisfaction ~ WartyClaim, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.36504 -0.90202  0.03019  0.90763  2.88985 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   5.3581     0.8813   6.079 2.32e-08 ***
+## WartyClaim    0.2581     0.1445   1.786   0.0772 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.179 on 98 degrees of freedom
+## Multiple R-squared:  0.03152,    Adjusted R-squared:  0.02164 
+## F-statistic:  3.19 on 1 and 98 DF,  p-value: 0.0772
+cor(Satisfaction,OrdBilling)
+## [1] 0.5217319
+plot(Satisfaction,OrdBilling, col="red", ylim = c(0,10), 
+     abline(lm(Satisfaction~OrdBilling), col="blue"))
+ 
+LM10 <- lm(Satisfaction~OrdBilling, data = Mydata)
+summary(LM10)
+## 
+## Call:
+## lm(formula = Satisfaction ~ OrdBilling, data = Mydata)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -2.4005 -0.7071 -0.0344  0.7340  2.9673 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   4.0541     0.4840   8.377 3.96e-13 ***
+## OrdBilling    0.6695     0.1106   6.054 2.60e-08 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.022 on 98 degrees of freedom
+## Multiple R-squared:  0.2722, Adjusted R-squared:  0.2648 
+## F-statistic: 36.65 on 1 and 98 DF,  p-value: 2.602e-08
+cor(Satisfaction,DelSpeed)
+## [1] 0.5770423
+plot(Satisfaction,DelSpeed, col="red", ylim = c(0,10), 
+     abline(lm(Satisfaction~DelSpeed), col="blue"))
+ 
+LM11 <- lm(Satisfaction~DelSpeed, data = Mydata)
+summary(LM11)
+## 
+## Call:
+## lm(formula = Satisfaction ~ DelSpeed, data = Mydata)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -2.22475 -0.54846  0.08796  0.54462  2.59432 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   3.2791     0.5294   6.194 1.38e-08 ***
+## DelSpeed      0.9364     0.1339   6.994 3.30e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.9783 on 98 degrees of freedom
+## Multiple R-squared:  0.333,  Adjusted R-squared:  0.3262 
+## F-statistic: 48.92 on 1 and 98 DF,  p-value: 3.3e-10
+Eigen Values extraction
+EV <- eigen(Matrix)
+EV
+## eigen() decomposition
+## $values
+##  [1] 3.42697133 2.55089671 1.69097648 1.08655606 0.60942409 0.55188378
+##  [7] 0.40151815 0.24695154 0.20355327 0.13284158 0.09842702
+## 
+## $vectors
+##             [,1]        [,2]        [,3]       [,4]        [,5]
+##  [1,] -0.1337896  0.31349802  0.06227164  0.6431362  0.23166620
+##  [2,] -0.1659528 -0.44650918 -0.23524791  0.2723803  0.42228844
+##  [3,] -0.1576926  0.23096734 -0.61095105 -0.1933931 -0.02395667
+##  [4,] -0.4706836 -0.01944394  0.21035078 -0.2063204  0.02865743
+##  [5,] -0.1837350 -0.36366471 -0.08809705  0.3178945 -0.80387024
+##  [6,] -0.3867652  0.28478056  0.11627864  0.2029023  0.11667416
+##  [7,] -0.2036696 -0.47069599 -0.24134210  0.2221772  0.20437283
+##  [8,]  0.1516886 -0.41345650  0.05304529 -0.3335435  0.24892601
+##  [9,] -0.2129336  0.19167191 -0.59856398 -0.1853020 -0.03292706
+## [10,] -0.4372177 -0.02639905  0.16892981 -0.2368536  0.02675377
+## [11,] -0.4730891 -0.07305172  0.23262477 -0.1973299 -0.03543294
+##              [,6]         [,7]        [,8]        [,9]       [,10]
+##  [1,]  0.56456996 -0.191641317  0.13547311  0.03132810 -0.06659717
+##  [2,] -0.26325703 -0.059626208 -0.12202642 -0.54251104 -0.28155772
+##  [3,]  0.10876896  0.017199915  0.46470964 -0.35929961  0.38817090
+##  [4,]  0.02815231  0.008499596  0.51339754  0.09324751 -0.53467243
+##  [5,]  0.20056937  0.063069619 -0.05347713 -0.15468169 -0.03715799
+##  [6,] -0.09819533  0.608147555 -0.33320710 -0.08415534  0.23479794
+##  [7,] -0.10497225 -0.001437351  0.16910665  0.64489911  0.35341191
+##  [8,]  0.70973595  0.308248871 -0.09883227 -0.09414389  0.04518224
+##  [9,]  0.13983966  0.030640243 -0.44354040  0.31756604 -0.43534752
+## [10,]  0.11947974 -0.659319893 -0.36601754 -0.09907265  0.30386545
+## [11,] -0.02979992  0.234239274  0.06539059 -0.02188514  0.12010386
+##             [,11]
+##  [1,] -0.18279209
+##  [2,] -0.06233863
+##  [3,]  0.05192956
+##  [4,]  0.36253352
+##  [5,]  0.08118684
+##  [6,]  0.38507778
+##  [7,]  0.08469869
+##  [8,]  0.10295751
+##  [9,] -0.12893245
+## [10,]  0.19415064
+## [11,] -0.77563222
+EigenValue <- EV$values
+EigenValue
+##  [1] 3.42697133 2.55089671 1.69097648 1.08655606 0.60942409 0.55188378
+##  [7] 0.40151815 0.24695154 0.20355327 0.13284158 0.09842702
+Scree Plot using kaiser normalization rule to determine total number of factors
+plot(EigenValue, col = "red" , pch = 20 , xlab = "Factors", ylab = "Eigen Values", main = "Scree Plot for EigenValues")
+lines(EigenValue, col = "red")
+ 
+Performing Factor Analysis to extract 4 factors
+F1 <- fa(Mydata[,-12], nfactors = 4, rotate = "none", fm = "pa" )
+F1
+## Factor Analysis using method =  pa
+## Call: fa(r = Mydata[, -12], nfactors = 4, rotate = "none", fm = "pa")
+## Standardized loadings (pattern matrix) based upon correlation matrix
+##               PA1   PA2   PA3   PA4   h2    u2 com
+## ProdQual     0.20 -0.41 -0.06  0.46 0.42 0.576 2.4
+## Ecom         0.29  0.66  0.27  0.22 0.64 0.362 2.0
+## TechSup      0.28 -0.38  0.74 -0.17 0.79 0.205 1.9
+## CompRes      0.86  0.01 -0.26 -0.18 0.84 0.157 1.3
+## Advertising  0.29  0.46  0.08  0.13 0.31 0.686 1.9
+## ProdLine     0.69 -0.45 -0.14  0.31 0.80 0.200 2.3
+## SalesFImage  0.39  0.80  0.35  0.25 0.98 0.021 2.1
+## ComPricing  -0.23  0.55 -0.04 -0.29 0.44 0.557 1.9
+## WartyClaim   0.38 -0.32  0.74 -0.15 0.81 0.186 2.0
+## OrdBilling   0.75  0.02 -0.18 -0.18 0.62 0.378 1.2
+## DelSpeed     0.90  0.10 -0.30 -0.20 0.94 0.058 1.4
+## 
+##                        PA1  PA2  PA3  PA4
+## SS loadings           3.21 2.22 1.50 0.68
+## Proportion Var        0.29 0.20 0.14 0.06
+## Cumulative Var        0.29 0.49 0.63 0.69
+## Proportion Explained  0.42 0.29 0.20 0.09
+## Cumulative Proportion 0.42 0.71 0.91 1.00
+## 
+## Mean item complexity =  1.9
+## Test of the hypothesis that 4 factors are sufficient.
+## 
+## The degrees of freedom for the null model are  55  and the objective function was  6.55 with Chi Square of  619.27
+## The degrees of freedom for the model are 17  and the objective function was  0.33 
+## 
+## The root mean square of the residuals (RMSR) is  0.02 
+## The df corrected root mean square of the residuals is  0.03 
+## 
+## The harmonic number of observations is  100 with the empirical chi square  3.19  with prob <  1 
+## The total number of observations was  100  with Likelihood Chi Square =  30.27  with prob <  0.024 
+## 
+## Tucker Lewis Index of factoring reliability =  0.921
+## RMSEA index =  0.096  and the 90 % confidence intervals are  0.032 0.139
+## BIC =  -48.01
+## Fit based upon off diagonal values = 1
+## Measures of factor score adequacy             
+##                                                    PA1  PA2  PA3  PA4
+## Correlation of (regression) scores with factors   0.98 0.97 0.95 0.88
+## Multiple R square of scores with factors          0.96 0.95 0.91 0.78
+## Minimum correlation of possible factor scores     0.92 0.90 0.82 0.56
+fa.diagram(F1)
+ 
+F2 <- fa(Mydata[,-12], nfactors = 4, rotate = "varimax", fm= "pa")
+F2
+## Factor Analysis using method =  pa
+## Call: fa(r = Mydata[, -12], nfactors = 4, rotate = "varimax", fm = "pa")
+## Standardized loadings (pattern matrix) based upon correlation matrix
+##               PA1   PA2   PA3   PA4   h2    u2 com
+## ProdQual     0.02 -0.07  0.02  0.65 0.42 0.576 1.0
+## Ecom         0.07  0.79  0.03 -0.11 0.64 0.362 1.1
+## TechSup      0.02 -0.03  0.88  0.12 0.79 0.205 1.0
+## CompRes      0.90  0.13  0.05  0.13 0.84 0.157 1.1
+## Advertising  0.17  0.53 -0.04 -0.06 0.31 0.686 1.2
+## ProdLine     0.53 -0.04  0.13  0.71 0.80 0.200 1.9
+## SalesFImage  0.12  0.97  0.06 -0.13 0.98 0.021 1.1
+## ComPricing  -0.08  0.21 -0.21 -0.59 0.44 0.557 1.6
+## WartyClaim   0.10  0.06  0.89  0.13 0.81 0.186 1.1
+## OrdBilling   0.77  0.13  0.09  0.09 0.62 0.378 1.1
+## DelSpeed     0.95  0.19  0.00  0.09 0.94 0.058 1.1
+## 
+##                        PA1  PA2  PA3  PA4
+## SS loadings           2.63 1.97 1.64 1.37
+## Proportion Var        0.24 0.18 0.15 0.12
+## Cumulative Var        0.24 0.42 0.57 0.69
+## Proportion Explained  0.35 0.26 0.22 0.18
+## Cumulative Proportion 0.35 0.60 0.82 1.00
+## 
+## Mean item complexity =  1.2
+## Test of the hypothesis that 4 factors are sufficient.
+## 
+## The degrees of freedom for the null model are  55  and the objective function was  6.55 with Chi Square of  619.27
+## The degrees of freedom for the model are 17  and the objective function was  0.33 
+## 
+## The root mean square of the residuals (RMSR) is  0.02 
+## The df corrected root mean square of the residuals is  0.03 
+## 
+## The harmonic number of observations is  100 with the empirical chi square  3.19  with prob <  1 
+## The total number of observations was  100  with Likelihood Chi Square =  30.27  with prob <  0.024 
+## 
+## Tucker Lewis Index of factoring reliability =  0.921
+## RMSEA index =  0.096  and the 90 % confidence intervals are  0.032 0.139
+## BIC =  -48.01
+## Fit based upon off diagonal values = 1
+## Measures of factor score adequacy             
+##                                                    PA1  PA2  PA3  PA4
+## Correlation of (regression) scores with factors   0.98 0.99 0.94 0.88
+## Multiple R square of scores with factors          0.96 0.97 0.88 0.78
+## Minimum correlation of possible factor scores     0.93 0.94 0.77 0.55
+fa.diagram(F2)
+ 
+F2$scores
+##                PA1         PA2          PA3         PA4
+##   [1,] -0.13388710  0.91751661 -1.719604873  0.09135411
+##   [2,]  1.62976040 -2.00900531 -0.596361722  0.65808192
+##   [3,]  0.36376581  0.83617362  0.002979966  1.37548765
+##   [4,] -1.22252302 -0.54913358  1.245473305 -0.64421384
+##   [5,] -0.48542093 -0.42762231 -0.026980304  0.47360747
+##   [6,] -0.59509240 -1.30353334 -1.183019401 -0.95913571
+##   [7,] -2.52885363  0.38836877 -0.603275803 -1.29659025
+##   [8,] -0.11315168 -0.13097631 -0.699238481 -1.36606005
+##   [9,]  0.95751096  0.34755882 -0.142256076 -0.93477420
+##  [10,]  0.58135807  0.43427719 -0.481549064 -0.66519579
+##  [11,] -0.04744554 -0.34677999 -0.477931226  0.62086386
+##  [12,] -1.22969845  1.22373499  0.307420873 -1.06601488
+##  [13,]  0.70120038  1.40162126 -0.077278204  0.61198552
+##  [14,]  0.18944710 -0.12001589  0.341391428  1.43748733
+##  [15,]  1.59586476  0.51484865 -0.307216912 -0.62265003
+##  [16,]  1.11215548 -1.25985548 -0.535588676  0.99091689
+##  [17,]  0.90477581 -0.30392244  0.909413294 -1.04926552
+##  [18,]  1.35863182  0.09820639  0.147598367 -0.63536585
+##  [19,]  0.76821232  0.25113902 -0.444327163 -0.84712501
+##  [20,]  0.61161128  1.74911250 -0.747772366 -0.37770002
+##  [21,] -0.49662748 -0.40513549  1.413398115 -1.42620085
+##  [22,] -0.24583333  2.83259042  0.458183224  2.15737479
+##  [23,] -0.08593028 -0.20647990  0.954813784  1.29099542
+##  [24,]  1.30419410 -0.65840510 -0.735880788  0.79535237
+##  [25,]  0.02837015  0.11289267  0.352466288 -0.83695432
+##  [26,]  0.37516895 -0.08949421  0.586591370 -1.33839027
+##  [27,]  0.69040218 -1.27676215  0.980470048  0.97700863
+##  [28,]  0.19330562 -1.09019060  0.410744110 -1.15018948
+##  [29,]  0.74807174 -1.20388888 -0.169444094  1.11442401
+##  [30,] -0.53645976 -0.31470400 -1.389463973 -0.62508147
+##  [31,] -0.98478652 -0.32465411  2.054616799  0.57213335
+##  [32,] -0.89540824 -1.30592549  1.145669622 -0.17981750
+##  [33,] -0.61006900 -0.25385457  0.201747129 -0.51103804
+##  [34,]  0.58139098 -0.57102185  0.160508882 -1.09267691
+##  [35,] -1.08254233  1.61817367  0.121735970 -0.32924397
+##  [36,] -1.51860194 -1.82264781  0.280394795  1.08323735
+##  [37,] -0.54298600 -0.45867623  0.359185746  0.44557509
+##  [38,]  1.35035690  0.28270522  0.116158567  0.69743150
+##  [39,]  0.98244317 -0.26293227 -1.015054009 -0.98172621
+##  [40,] -0.92383910  1.28059000 -1.167921851 -0.79331056
+##  [41,]  0.09932064  0.09827305 -1.837451060 -0.63276007
+##  [42,]  0.10869713 -0.04357923 -1.050920110  0.49209145
+##  [43,]  0.44811474  1.20846081 -0.968824054  0.72015394
+##  [44,]  0.70660340  2.17850627  1.233358555 -0.84868686
+##  [45,]  1.38263370 -2.03732511 -0.954180731  0.77953010
+##  [46,]  0.94936859  0.24232567  0.291172997 -0.56344261
+##  [47,]  0.08771633 -0.60985289  0.976205747  0.45795642
+##  [48,]  1.81030056  0.43834059  0.814478797 -1.17962559
+##  [49,] -0.19224074  1.62888205 -0.733730711  1.33934942
+##  [50,]  0.22531882  0.78430768 -0.957752366  0.92784955
+##  [51,] -1.41135829 -0.16930613  0.091870699 -0.12631052
+##  [52,]  1.75365232 -1.99153570 -1.147542434  0.70646283
+##  [53,]  0.93209854 -0.51397965 -0.162358377  0.70759613
+##  [54,] -0.94184081 -0.25288506  0.358406630  0.67268912
+##  [55,]  0.72242047 -0.54924734 -0.909388995 -1.09941166
+##  [56,] -0.63244099  0.41450294  0.914064214  0.81720176
+##  [57,]  1.99193341  1.41977208 -0.077384854 -0.41266731
+##  [58,]  0.08548402  0.30077469  0.319615332  0.74357193
+##  [59,] -0.57061091 -0.34885418  0.365475898  0.45601852
+##  [60,]  0.83067496 -1.65626897  0.641678078  0.23244952
+##  [61,]  0.86635294 -1.24543164  1.546930711  0.94382806
+##  [62,] -0.60680134  0.74525730 -0.146586558 -0.25509333
+##  [63,] -1.00306329 -0.09710517 -1.081705300  0.42111790
+##  [64,] -1.28310920 -1.59838664  0.403626668 -0.02388625
+##  [65,] -1.39461685 -0.23395772  0.557826636 -0.26460336
+##  [66,]  1.60952000  0.55610373 -0.999093684 -1.16665258
+##  [67,]  1.07257520 -0.39772241  1.815878900 -1.14631126
+##  [68,]  0.50884788 -0.29395183 -0.416389316 -0.75909753
+##  [69,] -0.70601563 -0.44707894 -0.973611521 -0.83304582
+##  [70,]  0.23899120  0.05018369 -1.219545924 -1.27828253
+##  [71,]  0.48631145  1.74069413  0.854795068 -0.43411595
+##  [72,] -1.37477720 -0.22770098 -1.265787815  1.00015839
+##  [73,]  0.76539809  0.81612817 -1.748046205 -0.13852761
+##  [74,] -0.64249465  1.66245576  1.253902625  1.20305576
+##  [75,] -0.26909538  0.83656999 -0.210138132 -0.11412392
+##  [76,] -0.12296694 -0.33391431  1.172210398  0.39677906
+##  [77,]  0.10371878 -0.33487753  2.082854211 -1.18017022
+##  [78,]  0.46301479 -0.33956677  1.214737442  0.10357998
+##  [79,]  0.98918468  0.65624508  0.485336460  1.22733204
+##  [80,] -1.74919939  0.82890385  0.003384046  0.09231225
+##  [81,] -0.32137992 -0.20110631  0.470666208  0.60888606
+##  [82,] -0.03471489 -0.38974940  0.412648407  0.57771035
+##  [83,] -1.17790878 -0.90045717  0.198122454  0.40011473
+##  [84,] -2.55956258 -0.25686675  1.554283149 -1.14101556
+##  [85,]  0.73971919 -0.90696938  0.655846983  0.51129012
+##  [86,] -0.50161741 -0.56408382 -1.009145207 -0.86106988
+##  [87,] -1.33057806 -0.01745886 -2.201996451 -0.92403144
+##  [88,]  0.70358137 -0.91236060  1.299031585  0.56968494
+##  [89,]  0.10912530 -0.46505791  0.266161987  0.17120142
+##  [90,]  1.02813129  2.57446865  1.640665437 -0.80151398
+##  [91,] -1.04672561  0.44260491  1.394021786  0.75011393
+##  [92,] -1.90712581 -0.46993540 -0.522475751 -1.31422452
+##  [93,]  0.07279015 -0.02235421 -0.352359525  1.61044504
+##  [94,]  1.08706436  0.61924340  0.089460676  1.16081123
+##  [95,] -0.95457978  0.66256003 -0.981787816  1.06717592
+##  [96,] -0.41931326  0.70755398 -0.077703201  0.52522023
+##  [97,] -0.12315824 -0.25275815 -1.762967608 -0.63424275
+##  [98,] -1.79270636 -1.59315365 -1.309147686  1.28219570
+##  [99,] -0.33991434  1.89138931  0.122487640 -0.17511674
+## [100,] -0.31758889 -0.42356050 -0.453981729 -1.03250054
+New data frame with the independent variable and four factor scores
+FactorRegressiondata <- cbind(Mydata[,12], F2$scores)
+head(FactorRegressiondata)
+##                 PA1        PA2          PA3         PA4
+## [1,] 8.2 -0.1338871  0.9175166 -1.719604873  0.09135411
+## [2,] 5.7  1.6297604 -2.0090053 -0.596361722  0.65808192
+## [3,] 8.9  0.3637658  0.8361736  0.002979966  1.37548765
+## [4,] 4.8 -1.2225230 -0.5491336  1.245473305 -0.64421384
+## [5,] 7.1 -0.4854209 -0.4276223 -0.026980304  0.47360747
+## [6,] 4.7 -0.5950924 -1.3035333 -1.183019401 -0.95913571
+Naming the factors
+colnames(FactorRegressiondata) <- c("Satisfaction", "Fulfillment", "Business", "AfterService", "Product")
+Convert to data frame
+FactorsBusiness <- as.data.frame(FactorRegressiondata)
+head(FactorsBusiness)
+##   Satisfaction Fulfillment   Business AfterService     Product
+## 1          8.2  -0.1338871  0.9175166 -1.719604873  0.09135411
+## 2          5.7   1.6297604 -2.0090053 -0.596361722  0.65808192
+## 3          8.9   0.3637658  0.8361736  0.002979966  1.37548765
+## 4          4.8  -1.2225230 -0.5491336  1.245473305 -0.64421384
+## 5          7.1  -0.4854209 -0.4276223 -0.026980304  0.47360747
+## 6          4.7  -0.5950924 -1.3035333 -1.183019401 -0.95913571
+is.data.frame(FactorsBusiness)
+## [1] TRUE
+attach(FactorsBusiness)
+## The following object is masked from Mydata:
+## 
+##     Satisfaction
+Multiple linear regression with the 4 factors
+MLR <- lm(Satisfaction~Fulfillment+Business+AfterService+Product , data = FactorsBusiness)
+summary(MLR)
+## 
+## Call:
+## lm(formula = Satisfaction ~ Fulfillment + Business + AfterService + 
+##     Product, data = FactorsBusiness)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.7125 -0.4708  0.1024  0.4158  1.3483 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   6.91800    0.06696 103.317  < 2e-16 ***
+## Fulfillment   0.57963    0.06857   8.453 3.32e-13 ***
+## Business      0.61978    0.06834   9.070 1.61e-14 ***
+## AfterService  0.05692    0.07173   0.794    0.429    
+## Product       0.61168    0.07656   7.990 3.16e-12 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.6696 on 95 degrees of freedom
+## Multiple R-squared:  0.6971, Adjusted R-squared:  0.6844 
+## F-statistic: 54.66 on 4 and 95 DF,  p-value: < 2.2e-16
+Data Partitioning
+set.seed(1234)
+split <- sample.split(Satisfaction, SplitRatio = 0.7)
+TrainData <- subset(FactorsBusiness,split == T)
+TestData <- subset(FactorsBusiness, split == F)
+dim(TrainData)
+## [1] 71  5
+dim(TestData)
+## [1] 29  5
+Multiple regression using train data
+MLR <- lm(Satisfaction~., data = TrainData)
+summary(MLR)
+## 
+## Call:
+## lm(formula = Satisfaction ~ ., data = TrainData)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -1.07153 -0.42578 -0.01652  0.38619  1.27831 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)   6.925120   0.066212 104.590  < 2e-16 ***
+## Fulfillment   0.553473   0.066208   8.360 6.02e-12 ***
+## Business      0.750898   0.068772  10.919  < 2e-16 ***
+## AfterService -0.001064   0.069597  -0.015    0.988    
+## Product       0.525923   0.069971   7.516 1.94e-10 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.5554 on 66 degrees of freedom
+## Multiple R-squared:  0.8049, Adjusted R-squared:  0.7931 
+## F-statistic: 68.09 on 4 and 66 DF,  p-value: < 2.2e-16
+vif(MLR)
+##  Fulfillment     Business AfterService      Product 
+##     1.011048     1.005816     1.000977     1.006056
+Validation on test data
+Prediction <- predict(MLR, newdata = TestData)
+SST <- sum((TestData$Satisfaction - mean(TrainData$Satisfaction))^2)
+SST
+## [1] 36.27184
+SSE <- sum((Prediction - TestData$Satisfaction)^2)
+SSE
+## [1] 24.93798
+SSR <- sum((Prediction - mean(TrainData$Satisfaction))^2)
+SSR
+## [1] 20.04646
+SSR/SST
+## [1] 0.5526728
+Backtracking of the model on test data
+Prediction <- predict(MLR, newdata = TestData)
+Actual <- TestData$Satisfaction
+Backtrack <- data.frame(Prediction,Actual)
+Backtrack
+##    Prediction Actual
+## 9    7.224591    7.0
+## 10   7.223655    5.5
+## 25   6.585045    4.8
+## 31   6.434997    6.1
+## 32   5.353129    6.4
+## 33   6.127863    5.4
+## 35   7.367760    6.3
+## 39   6.756209    7.6
+## 40   6.959416    6.0
+## 48   7.634964    7.6
+## 51   5.950312    5.4
+## 52   6.773045    5.7
+## 53   7.427379    8.7
+## 59   6.586790    7.1
+## 60   6.262755    7.9
+## 62   7.014881    8.0
+## 63   6.519662    6.3
+## 69   5.761567    5.2
+## 74   8.449232    8.6
+## 76   6.813754    7.1
+## 78   6.979589    7.6
+## 82   6.916636    7.4
+## 83   5.807246    6.6
+## 88   6.927672    8.2
+## 89   6.726062    7.3
+## 90   9.004048    8.2
+## 94   8.602172    8.9
+## 95   7.456598    7.7
+## 99   8.065000    6.4
+plot(Prediction, col= "red")
+lines(Prediction , col= "red")
+ 
+plot(Actual, col="blue")
+lines(Actual, col="blue")
+ 
+Backtracking of the model on train data
+Prediction2 <- predict(MLR, newdata = TrainData)
+Actual2 <- TrainData$Satisfaction
+Backtrack1 <- data.frame(Prediction2, Actual2)
+
+plot(Prediction2, col= "red")
+lines(Prediction2 , col= "red")
+ 
+plot(Actual2, col="blue")
+lines(Actual2, col="blue")
+ 
